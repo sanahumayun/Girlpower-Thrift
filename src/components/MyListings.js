@@ -39,13 +39,14 @@ const MyListings = ({ user }) => {
 
     setUploading(true);
 
-    // 2. AWS S3 Upload Logic
-    const fileName = `PKR {Date.now()}_PKR {imageFile.name}`;
+    // FIX: Use backticks and ${} for unique filenames
+    // This ensures every file has a unique timestamp prefix
+    const fileName = `${Date.now()}_${imageFile.name.replace(/\s/g, '_')}`;
+    
     const params = {
       Bucket: process.env.REACT_APP_AWS_S3_BUCKET_NAME,
       Key: fileName,
       Body: imageFile,
-    //   ACL: 'public-read', // Ensure your bucket policy allows this
       ContentType: imageFile.type
     };
 
@@ -53,7 +54,7 @@ const MyListings = ({ user }) => {
       const upload = await s3.upload(params).promise();
       const s3ImageUrl = upload.Location;
 
-      // 3. Save to Firebase with S3 URL
+      // Save to Firebase with the unique S3 URL
       await addDoc(collection(db, "listings"), {
         title,
         price: Number(price),
@@ -66,10 +67,16 @@ const MyListings = ({ user }) => {
       });
 
       // Reset form
-      setTitle(''); setPrice(''); setImageFile(null);
+      setTitle(''); 
+      setPrice(''); 
+      setImageFile(null);
       setShowAddForm(false);
+      
+      // Optional: Clear the file input manually if needed
+      e.target.reset(); 
+      
     } catch (err) {
-      console.error(err);
+      console.error("AWS Upload Error:", err);
       alert("Upload failed: " + err.message);
     } finally {
       setUploading(false);

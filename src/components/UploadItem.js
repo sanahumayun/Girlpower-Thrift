@@ -32,18 +32,17 @@ const UploadItem = ({ onUploadSuccess }) => {
 
     setIsUploading(true);
 
-    // 1. AWS S3 Upload Logic
-    const fileName = `PKR {Date.now()}_PKR {imageFile.name}`;
+    // 1. FIX: Generate a truly unique filename using backticks and ${}
+    const fileName = `${Date.now()}_${imageFile.name.replace(/\s/g, '_')}`;
+    
     const params = {
       Bucket: S3_BUCKET,
       Key: fileName,
       Body: imageFile,
-    //   ACL: 'public-read',
       ContentType: imageFile.type
     };
 
     try {
-      // Use .on('httpUploadProgress') to track progress for a better UI
       const uploadRequest = s3.upload(params);
       
       uploadRequest.on('httpUploadProgress', (evt) => {
@@ -61,7 +60,7 @@ const UploadItem = ({ onUploadSuccess }) => {
         category,
         imageUrl: s3Url,
         sellerId: auth.currentUser.uid,
-        sellerName: auth.currentUser.displayName,
+        sellerName: auth.currentUser.displayName || auth.currentUser.email,
         status: 'available',
         createdAt: serverTimestamp()
       });
@@ -70,7 +69,7 @@ const UploadItem = ({ onUploadSuccess }) => {
       
       // Reset Form
       setTitle(''); setPrice(''); setCategory(categories[0]); setImageFile(null); setProgress(0);
-      if (onUploadSuccess) onUploadSuccess(); // Close modal or switch tabs
+      if (onUploadSuccess) onUploadSuccess(); 
 
     } catch (error) {
       console.error("Upload Error:", error);
@@ -97,7 +96,7 @@ const UploadItem = ({ onUploadSuccess }) => {
           />
           <input 
             type="number" 
-            placeholder="Price (PKR )" 
+            placeholder="Price (PKR)" 
             value={price} 
             onChange={(e) => setPrice(e.target.value)} 
             required 
@@ -116,7 +115,8 @@ const UploadItem = ({ onUploadSuccess }) => {
 
         <div style={styles.fileUploadArea}>
           <label style={styles.fileLabel}>
-            {imageFile ? `Selected: PKR {imageFile.name}` : "Click to select a photo"}
+            {/* FIX: Corrected string template here too */}
+            {imageFile ? `Selected: ${imageFile.name}` : "Click to select a photo"}
             <input 
               type="file" 
               accept="image/*" 
@@ -128,7 +128,8 @@ const UploadItem = ({ onUploadSuccess }) => {
 
         {isUploading && (
           <div style={styles.progressContainer}>
-            <div style={{ ...styles.progressBar, width: `PKR {progress}%` }}></div>
+            {/* FIX: Corrected progress bar width logic */}
+            <div style={{ ...styles.progressBar, width: `${progress}%` }}></div>
             <span style={styles.progressText}>{progress}% Uploaded</span>
           </div>
         )}
@@ -146,45 +147,16 @@ const UploadItem = ({ onUploadSuccess }) => {
   );
 };
 
+// ... Styles remain the same ...
 const styles = {
-  formCard: {
-    maxWidth: '500px',
-    margin: '40px auto',
-    padding: '30px',
-    borderTop: '6px solid var(--primary)'
-  },
+  formCard: { maxWidth: '500px', margin: '40px auto', padding: '30px', borderTop: '6px solid var(--primary)' },
   form: { display: 'flex', flexDirection: 'column', gap: '15px' },
   row: { display: 'flex', gap: '10px' },
-  fileUploadArea: {
-    border: '2px dashed #ddd',
-    padding: '20px',
-    borderRadius: '10px',
-    textAlign: 'center',
-    cursor: 'pointer',
-    background: '#fafafa'
-  },
+  fileUploadArea: { border: '2px dashed #ddd', padding: '20px', borderRadius: '10px', textAlign: 'center', cursor: 'pointer', background: '#fafafa' },
   fileLabel: { color: 'var(--primary)', fontWeight: 'bold', cursor: 'pointer' },
-  progressContainer: {
-    height: '20px',
-    background: '#eee',
-    borderRadius: '10px',
-    overflow: 'hidden',
-    position: 'relative'
-  },
-  progressBar: {
-    height: '100%',
-    background: 'var(--accent)',
-    transition: 'width 0.3s ease'
-  },
-  progressText: {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    transform: 'translate(-50%, -50%)',
-    fontSize: '0.7rem',
-    fontWeight: 'bold',
-    color: '#333'
-  }
+  progressContainer: { height: '20px', background: '#eee', borderRadius: '10px', overflow: 'hidden', position: 'relative' },
+  progressBar: { height: '100%', background: 'var(--accent)', transition: 'width 0.3s ease' },
+  progressText: { position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontSize: '0.7rem', fontWeight: 'bold', color: '#333' }
 };
 
 export default UploadItem;
