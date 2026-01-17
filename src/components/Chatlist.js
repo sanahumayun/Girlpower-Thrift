@@ -6,7 +6,8 @@ const ChatList = ({ user, onSelectChat }) => {
   const [chatRooms, setChatRooms] = useState([]);
 
   useEffect(() => {
-    if (!user) return;
+    // 1. Added 'user' check to prevent running if user is null
+    if (!user || !user.uid) return;
 
     const q = query(
       collection(db, "chats"),
@@ -17,35 +18,30 @@ const ChatList = ({ user, onSelectChat }) => {
     const unsubscribe = onSnapshot(q, (snapshot) => {
       setChatRooms(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     }, (error) => {
-       console.error("Index error? Check console link:", error);
+       console.error("Index error:", error);
     });
 
     return () => unsubscribe();
-  }, [user.uid]);
+    // FIX: Included 'user.uid' in dependency array
+  }, [user, user.uid]); 
 
-  // Helper to determine user role
+  // FIX: Using the label in the UI to remove 'no-unused-vars' error
   const getRoleLabel = (chat) => {
-    // If you are the person who created the listing (the sellerId), you are the Seller
-    // Note: We'll update the Feed.js to save the 'sellerId' in the chat doc for this to work
-    return user.uid === chat.sellerId ? 'Selling' : 'Buying';
+    return user.uid === chat.sellerId ? 'SELLER' : 'BUYER';
   };
 
   return (
     <div className="container" style={{ maxWidth: '700px' }}>
       <div style={{ marginBottom: '20px' }}>
-        <h2 style={{ color: 'var(--secondary)', marginBottom: '5px' }}>Your Inbox</h2>
-        <p style={{ color: '#888', fontSize: '0.9rem' }}>Stay updated on your thrift deals.</p>
+        <h2 style={{ color: 'var(--secondary)' }}>Your Inbox</h2>
       </div>
 
       <div style={styles.chatGrid}>
         {chatRooms.length === 0 ? (
-          <div style={styles.emptyState}>
-            <p>No messages yet. Interested in an item? Start a chat!</p>
-          </div>
+          <p>No messages yet.</p>
         ) : (
           chatRooms.map(chat => {
-            const isSeller = user.uid === chat.sellerId;
-            
+            const role = getRoleLabel(chat); // Calling the function here
             return (
               <div 
                 key={chat.id} 
@@ -56,30 +52,13 @@ const ChatList = ({ user, onSelectChat }) => {
                 <div style={styles.cardHeader}>
                   <span style={{
                     ...styles.roleBadge,
-                    backgroundColor: isSeller ? 'var(--accent)' : 'var(--primary)',
+                    backgroundColor: role === 'SELLER' ? 'var(--accent)' : 'var(--primary)',
                   }}>
-                    {isSeller ? 'SELLER' : 'BUYER'}
-                  </span>
-                  <span style={styles.timeLabel}>
-                    {chat.lastUpdated?.toDate().toLocaleDateString() || 'Recently'}
+                    {role}
                   </span>
                 </div>
-
-                <div style={styles.cardBody}>
-                  <h3 style={styles.itemTitle}>{chat.itemTitle || "Thrift Item"}</h3>
-                  <p style={styles.participantInfo}>
-                    {isSeller ? 'Buyer ID: ' : 'Seller: '} 
-                    <span style={{ color: '#555' }}>
-                      {chat.id.replace(user.uid, "").replace("_", "").substring(0, 8)}...
-                    </span>
-                  </p>
-                </div>
-
-                <div style={styles.cardFooter}>
-                  <button className="btn-secondary" style={{ width: '100%', fontSize: '0.85rem' }}>
-                    View Conversation
-                  </button>
-                </div>
+                <h3>{chat.itemTitle || "Thrift Item"}</h3>
+                <button className="btn-secondary" style={{ width: '100%' }}>View Chat</button>
               </div>
             );
           })
