@@ -61,7 +61,7 @@ const UploadItem = ({ onUploadSuccess }) => {
         category,
         imageUrl: s3Url,
         sellerId: auth.currentUser.uid,
-        sellerName: auth.currentUser.displayName || auth.currentUser.email,
+        sellerName: auth.currentUser.displayName,
         status: 'available',
         createdAt: serverTimestamp()
       });

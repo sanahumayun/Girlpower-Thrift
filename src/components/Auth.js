@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { auth, db } from '../firebase';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
+import { updateProfile } from "firebase/auth";
 
 // SET YOUR COMMUNITY SECRETS HERE
 const COMMUNITY_CONFIG = {
@@ -48,6 +49,11 @@ const Auth = ({ setUser }) => {
           createdAt: new Date()
         });
 
+        // Inside handleAuth after userCredential is created:
+        await updateProfile(userCredential.user, {
+        displayName: name
+        });
+
       } else {
         // Simple Login
         await signInWithEmailAndPassword(auth, email, password);
@@ -60,7 +66,7 @@ const Auth = ({ setUser }) => {
   return (
     <div className="card" style={styles.authCard}>
       <h2 style={{ color: 'var(--primary)', textAlign: 'center' }}>
-        {isRegistering ? "Community Registration" : "Welcome Back"}
+        {isRegistering ? "Registration" : "Welcome Back"}
       </h2>
       
       {error && <p style={styles.errorText}>{error}</p>}
@@ -96,7 +102,7 @@ const Auth = ({ setUser }) => {
         <input type="password" placeholder="Password" className="custom-input" onChange={(e) => setPassword(e.target.value)} required />
         
         <button type="submit" className="btn-primary" style={{ padding: '12px' }}>
-          {isRegistering ? "Create Community Account" : "Login"}
+          {isRegistering ? "Create Account" : "Login"}
         </button>
       </form>
 

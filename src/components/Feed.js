@@ -96,7 +96,7 @@ const filteredListings = listings.filter(item => {
 
             <div style={{ padding: '20px', textAlign: 'left' }}>
               <h3 style={{ margin: '0 0 5px 0', fontSize: '1.1rem', color: 'var(--secondary)' }}>{item.title}</h3>
-              <p style={{ margin: '0 0 15px 0', fontSize: '0.85rem', color: '#888' }}>Seller: {item.sellerName || "Anonymous"}</p>
+              <p style={{ margin: '0 0 15px 0', fontSize: '0.85rem', color: '#888' }}>Seller: {item.sellerName }</p>
               
               <button 
                 onClick={() => handleMessageSeller(item)} 
